@@ -35,12 +35,8 @@ import time
 import collections, itertools
 import logging
 import threading
-try:
-    from ssl import wrap_socket, SSLError
-except ImportError:
-    from socket import ssl as wrap_socket, sslerror as SSLError
-
-from _ssl import SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE
+from ssl import wrap_socket, SSLError
+from ssl import SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE
 
 import json
 
