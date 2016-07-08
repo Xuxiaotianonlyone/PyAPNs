@@ -36,7 +36,7 @@ import collections, itertools
 import logging
 import threading
 from ssl import wrap_socket, SSLError
-from ssl import SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE
+from ssl import SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE # type: ignore # these are undocumented constants
 
 import json
 

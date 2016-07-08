@@ -1,0 +1,13 @@
+#!/bin/bash
+
+args="--fast-parser"
+
+set -e
+set -x
+
+mypy $args apns.py --py2
+mypy $args tests.py --py2
+mypy $args apns-send --py2
+
+mypy $args apns.py
+mypy $args tests.py
