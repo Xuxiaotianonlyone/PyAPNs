@@ -223,11 +223,7 @@ class APNsConnection(object):
                     self._ssl = wrap_socket(self._socket, self.key_file, self.cert_file)
                     break
                 except SSLError as ex:
-                    if ex.args[0] == SSL_ERROR_WANT_READ:
-                        sys.exc_clear()
-                    elif ex.args[0] == SSL_ERROR_WANT_WRITE:
-                        sys.exc_clear()
-                    else:
+                    if ex.args[0] != SSL_ERROR_WANT_READ and ex.args[0] != SSL_ERROR_WANT_WRITE:
                        raise
         
         self.connection_alive = True
@@ -256,14 +252,12 @@ class APNsConnection(object):
             _, wlist, _ = select.select([], [self._connection()], [], WAIT_WRITE_TIMEOUT_SEC)
             
             if len(wlist) > 0:
-                length = self._connection().sendall(string)
-                if length == 0:
-                    _logger.debug("sent length: %d" % length) #DEBUG
+                self._connection().sendall(string)
             else:
                 _logger.warning("write socket descriptor is not ready after " + str(WAIT_WRITE_TIMEOUT_SEC))
             
         else: # blocking socket
-            return self._connection().write(string)
+            self._connection().write(string)
 
 
 class PayloadAlert(object):
@@ -407,9 +401,7 @@ class FeedbackConnection(APNsConnection):
     """
     def __init__(self, use_sandbox=False, **kwargs):
         super(FeedbackConnection, self).__init__(**kwargs)
-        self.server = (
-            'feedback.push.apple.com',
-            'feedback.sandbox.push.apple.com')[use_sandbox]
+        self.server = 'feedback.sandbox.push.apple.com' if use_sandbox else 'feedback.push.apple.com'
         self.port = 2196
 
     def _chunks(self):
@@ -462,9 +454,7 @@ class GatewayConnection(APNsConnection):
     
     def __init__(self, use_sandbox=False, **kwargs):
         super(GatewayConnection, self).__init__(**kwargs)
-        self.server = (
-            'gateway.push.apple.com',
-            'gateway.sandbox.push.apple.com')[use_sandbox]
+        self.server = 'gateway.sandbox.push.apple.com' if use_sandbox else 'gateway.push.apple.com'
         self.port = 2195
         if self.enhanced == True: #start error-response monitoring thread       
             self._last_activity_time = time.time()
@@ -477,7 +467,7 @@ class GatewayConnection(APNsConnection):
 
     def _init_error_response_handler_worker(self):
         self._send_lock = threading.RLock()
-        self._error_response_handler_worker = self.ErrorResponseHandlerWorker(apns_connection=self)
+        self._error_response_handler_worker = GatewayConnection.ErrorResponseHandlerWorker(apns_connection=self)
         self._error_response_handler_worker.start()
         _logger.debug("initialized error-response handler worker")
 
@@ -491,9 +481,7 @@ class GatewayConnection(APNsConnection):
         payload_json = payload.json()
         payload_length_bin = APNs.packed_ushort_big_endian(len(payload_json))
 
-        zero_byte = '\0'
-        if sys.version_info[0] != 2:
-            zero_byte = bytes(zero_byte, 'utf-8')
+        zero_byte = u'\0'.encode('utf-8')
         notification = (zero_byte + token_length_bin + token_bin
             + payload_length_bin + payload_json)
 
