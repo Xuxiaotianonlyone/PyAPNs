@@ -9,10 +9,7 @@ import os
 import time
 import unittest
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 
 TEST_CERTIFICATE = "certificate.pem" # replace with path to test certificate
 
