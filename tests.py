@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
-from apns import *
+from apns import APNs, Frame, MAX_PAYLOAD_LENGTH, Payload, PayloadAlert, PayloadTooLargeError
 from binascii import a2b_hex
 from random import random
 
 import hashlib
-import os
 import time
 import unittest
 
